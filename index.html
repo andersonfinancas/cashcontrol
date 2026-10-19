@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>CashControl</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#1a1a2e;max-width:600px;margin:0 auto}
+.header{background:#1a1a2e;color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:16px}
+.header button{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer}
+.screen{display:none;padding:12px;padding-bottom:80px}
+.screen.active{display:block}
+.card{background:#f8f9fa;border-radius:10px;padding:14px;margin-bottom:10px}
+.card h3{font-size:14px;margin-bottom:8px;color:#1a1a2e}
+.stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:13px}
+.stat:last-child{border:none}
+.stat .label{color:#666}
+.stat .value{font-weight:700}
+.green{color:#27ae60}
+.red{color:#e74c3c}
+.orange{color:#f39c12}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px}
+.btn-primary{background:#1a1a2e;color:#fff}
+.btn-success{background:#27ae60;color:#fff}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-warning{background:#f39c12;color:#fff}
+.btn-outline{background:#fff;color:#1a1a2e;border:2px solid #ddd}
+.btn-small{padding:8px 14px;width:auto;font-size:12px;display:inline-block}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:12px;color:#666;margin-bottom:4px;font-weight:600}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+.form-group textarea{height:60px;resize:none}
+.nav-bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:8px 0;max-width:600px;margin:0 auto;z-index:100}
+.nav-bottom button{background:none;border:none;font-size:10px;color:#999;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 8px}
+.nav-bottom button.active{color:#1a1a2e;font-weight:700}
+.nav-bottom button span{font-size:18px}
+.list-item{background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.list-item:active{background:#e9ecef}
+.list-item .info{flex:1}
+.list-item .info .name{font-size:14px;font-weight:600}
+.list-item .info .detail{font-size:11px;color:#888}
+.list-item .amount{font-size:14px;font-weight:700}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.badge-green{background:#e8f5e9;color:#27ae60}
+.badge-red{background:#fce4ec;color:#e74c3c}
+.badge-orange{background:#fff8e1;color:#f39c12}
+.badge-blue{background:#e3f2fd;color:#1976d2}
+.modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;justify-content:center;align-items:center}
+.modal.active{display:flex}
+.modal-content{background:#fff;border-radius:12px;padding:20px;width:92%;max-width:400px;max-height:85vh;overflow-y:auto}
+.modal-content h3{margin-bottom:14px;font-size:16px}
+.modal-buttons{display:flex;gap:8px;margin-top:14px}
+.modal-buttons .btn{flex:1}
+.section-title{font-size:13px;font-weight:700;color:#1a1a2e;margin:14px 0 8px;display:flex;align-items:center;gap:6px}
+.calc-box{background:#e8f5e9;border-radius:8px;padding:12px;margin:10px 0}
+.calc-box .calc-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0}
+.calc-box .calc-row.total{font-weight:700;font-size:14px;border-top:1px solid #27ae60;padding-top:6px;margin-top:4px}
+.empty{text-align:center;padding:30px;color:#999;font-size:13px}
+.search-box{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+.tabs button{padding:8px 14px;border:1px solid #ddd;border-radius:20px;background:#fff;font-size:12px;cursor:pointer;white-space:nowrap}
+.tabs button.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.checkbox-list label{display:flex;align-items:center;gap:8px;padding:8px;background:#f8f9fa;border-radius:6px;margin-bottom:4px;font-size:14px;cursor:pointer}
+.checkbox-list input[type=checkbox]{width:18px;height:18px}
+.login-container{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;background:#1a1a2e}
+.login-box{background:#fff;border-radius:12px;padding:30px;width:100%;max-width:360px}
+.login-box h1{font-size:22px;margin-bottom:6px;color:#1a1a2e;text-align:center}
+.login-box p{font-size:12px;color:#888;text-align:center;margin-bottom:20px}
+.login-box .error{color:#e74c3c;font-size:12px;text-align:center;margin-top:8px;display:none}
+.region-select{margin-bottom:12px}
+.region-select select{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-container">
+<div class="login-box">
+<h1>💰 CashControl</h1>
+<p>Sistema de Gestão de Empréstimos</p>
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="loginEmail" placeholder="seu@email.com">
+</div>
+<div class="form-group">
+<label>Senha</label>
+<input type="password" id="loginSenha" placeholder="Sua senha">
+</div>
+<button class="btn btn-primary" onclick="fazerLogin()">Entrar</button>
+<div class="error" id="loginError"></div>
+</div>
+</div>
+
+<!-- FUNCIONÁRIO: PAINEL -->
+<div id="funcPainel" class="screen">
+<div class="region-select">
+<select id="regiaoSelect" onchange="trocarRegiao()"></select>
+</div>
+<div class="card">
+<h3>📊 Resumo do Dia</h3>
+<div class="stat"><span class="label">💰 A receber hoje</span><span class="value" id="aReceberHoje">R$ 0</span></div>
+<div class="stat"><span class="label">✅ Recebido</span><span class="value green" id="recebidoHoje">R$ 0</span></div>
+<div class="stat"><span class="label">💵 Entregue</span><span class="value red" id="entregueHoje">R$ 0</span></div>
+<div class="stat"><span class="label">💸 Gastos</span><span class="value red" id="gastosHoje">R$ 0</span></div>
+<div class="stat"><span class="label">📊 Saldo</span><span class="value" id="saldoHoje">R$ 0</span></div>
+</div>
+<div class="section-title">📋 Cobranças de Hoje</div>
+<div id="cobrancasHoje"><div class="empty">Carregando...</div></div>
+<div class="section-title">🔴 Em Atraso</div>
+<div id="emAtraso"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- FUNCIONÁRIO: CLIENTES -->
+<div id="funcClientes" class="screen">
+<input type="text" class="search-box" placeholder="🔍 Buscar cliente..." id="buscaCliente" oninput="buscarClientes()">
+<button class="btn btn-primary" onclick="abrirModalCliente()">+ Novo Cliente</button>
+<div id="listaClientes"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- FUNCIONÁRIO: EMPRÉSTIMOS -->
+<div id="funcEmprestimos" class="screen">
+<button class="btn btn-primary" onclick="abrirModalEmprestimo()">+ Novo Empréstimo</button>
+<div class="tabs" id="tabsEmprestimo">
+<button class="active" onclick="filtrarEmprestimos('ativo',this)">Ativos</button>
+<button onclick="filtrarEmprestimos('quitado',this)">Quitados</button>
+<button onclick="filtrarEmprestimos('todos',this)">Todos</button>
+</div>
+<div id="listaEmprestimos"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- FUNCIONÁRIO: CAIXA -->
+<div id="funcCaixa" class="screen">
+<button class="btn btn-success" onclick="abrirModalPagamento()">✅ Registrar Pagamento</button>
+<button class="btn btn-warning" onclick="abrirModalEntrega()">💵 Entrega de Dinheiro</button>
+<button class="btn btn-outline" onclick="abrirModalGasto()">💸 Registrar Gasto</button>
+<button class="btn btn-outline" onclick="abrirModalRetirada()">💰 Retirada Sócio</button>
+<button class="btn btn-primary" onclick="abrirFecharCaixa()" style="margin-top:10px">📊 Fechar Caixa</button>
+<div class="section-title">💸 Gastos de Hoje</div>
+<div id="gastosLista"><div class="empty">Nenhum gasto registrado</div></div>
+</div>
+
+<!-- DONO: DASHBOARD -->
+<div id="donoDash" class="screen">
+<div class="card">
+<h3>📊 Dashboard Geral</h3>
+<div class="stat"><span class="label">💰 Total Emprestado</span><span class="value" id="totalEmprestado">R$ 0</span></div>
+<div class="stat"><span class="label">💰 Total a Receber</span><span class="value" id="totalReceber">R$ 0</span></div>
+<div class="stat"><span class="label">✅ Recebido (mês)</span><span class="value green" id="totalRecebidoMes">R$ 0</span></div>
+<div class="stat"><span class="label">🔴 Inadimplência</span><span class="value red" id="totalInadimplencia">R$ 0</span></div>
+</div>
+<div class="section-title">🗂️ Regiões</div>
+<div id="donoRegioes"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- DONO: REGIÕES -->
+<div id="donoRegioesScreen" class="screen">
+<button class="btn btn-primary" onclick="abrirModalRegiao()">+ Nova Região</button>
+<div id="listaRegioes"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- DONO: FUNCIONÁRIOS -->
+<div id="donoFuncScreen" class="screen">
+<button class="btn btn-primary" onclick="abrirModalNovoFunc()">+ Novo Funcionário</button>
+<div id="listaFuncionarios"><div class="empty">Carregando...</div></div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="mainHeader" style="display:none">
+<h1 id="headerTitle">💰 CashControl</h1>
+<button onclick="fazerLogout()">Sair</button>
+</div>
+
+<!-- NAV FUNCIONÁRIO -->
+<div class="nav-bottom" id="navFunc" style="display:none">
+<button class="active" onclick="navegar('funcPainel',this)"><span>📊</span>Painel</button>
+<button onclick="navegar('funcClientes',this)"><span>👥</span>Clientes</button>
+<button onclick="navegar('funcEmprestimos',this)"><span>💰</span>Empréstimos</button>
+<button onclick="navegar('funcCaixa',this)"><span>💼</span>Caixa</button>
+</div>
+
+<!-- NAV DONO -->
+<div class="nav-bottom" id="navDono" style="display:none">
+<button class="active" onclick="navegar('donoDash',this)"><span>📊</span>Dashboard</button>
+<button onclick="navegar('donoRegioesScreen',this)"><span>🗂️</span>Regiões</button>
+<button onclick="navegar('donoFuncScreen',this)"><span>👥</span>Funcionários</button>
+</div>
+
+<!-- MODAL GENÉRICO -->
+<div class="modal" id="modal">
+<div class="modal-content" id="modalContent"></div>
+</div>
+
+<script>
+// ==========================================
+// SUPABASE CONFIG
+// ==========================================
+var SUPABASE_URL='https://qyuwhcpsvunwbgtenaga.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dXdoY3BzdnVud2JndGVuYWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0MjQ0NTMsImV4cCI6MjEwODAwMDQ1M30.-c_4x2qjje78Rla0S4fZBdSeWTjwMtRiCr2sydrROzw';
+
+var currentUser=null;
+var currentRegiao=null;
+var allRegioes=[];
+var allClientes=[];
+var allEmprestimos=[];
+
+// ==========================================
+// SUPABASE API HELPER
+// ==========================================
+function sbFetch(table,method,body,query){
+var url=SUPABASE_URL+'/rest/v1/'+table+(query||'');
+var opts={method:method||'GET',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''}};
+if(body)opts.body=JSON.stringify(body);
+return fetch(url,opts).then(function(r){
+if(!r.ok)return r.text().then(function(t){throw new Error(t)});
+var ct=r.headers.get('content-type');
+if(ct&&ct.indexOf('json')>-1)return r.json();
+return null;
+});
+}
+
+// ==========================================
+// LOGIN
+// ==========================================
+function fazerLogin(){
+var email=document.getElementById('loginEmail').value.trim();
+var senha=document.getElementById('loginSenha').value.trim();
+var errEl=document.getElementById('loginError');
+errEl.style.display='none';
+if(!email||!senha){errEl.textContent='Preencha email e senha';errEl.style.display='block';return;}
+sbFetch('usuarios','GET',null,'?email=eq.'+encodeURIComponent(email)+'&senha=eq.'+encodeURIComponent(senha)+'&ativo=eq.true').then(function(data){
+if(!data||data.length===0){errEl.textContent='Email ou senha incorretos';errEl.style.display='block';return;}
+currentUser=data[0];
+localStorage.setItem('cc_user',JSON.stringify(currentUser));
+iniciarApp();
+}).catch(function(e){errEl.textContent='Erro de conexão: '+e.message;errEl.style.display='block';});
+}
+
+function fazerLogout(){
+currentUser=null;
+localStorage.removeItem('cc_user');
+document.getElementById('loginScreen').style.display='flex';
+document.getElementById('mainHeader').style.display='none';
+document.getElementById('navFunc').style.display='none';
+document.getElementById('navDono').style.display='none';
+var screens=document.querySelectorAll('.screen');
+for(var i=0;i<screens.length;i++)screens[i].classList.remove('active');
+document.getElementById('loginEmail').value='';
+document.getElementById('loginSenha').value='';
+}
+
+function iniciarApp(){
+document.getElementById('loginScreen').style.display='none';
+document.getElementById('mainHeader').style.display='flex';
+if(currentUser.tipo==='dono'){
+document.getElementById('navDono').style.display='flex';
+document.getElementById('navFunc').style.display='none';
+document.getElementById('headerTitle').textContent='💰 CashControl — Admin';
+navegar('donoDash',document.querySelector('#navDono button'));
+carregarDashDono();
+}else{
+document.getElementById('navFunc').style.display='flex';
+document.getElementById('navDono').style.display='none';
+document.getElementById('headerTitle').textContent='💰 CashControl';
+carregarRegioesFunc();
+}
+}
+
+// ==========================================
+// NAVEGAÇÃO
+// ==========================================
+function navegar(screenId,btn){
+var nav=btn.parentElement;
+var btns=nav.querySelectorAll('button');
+for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');
+btn.classList.add('active');
+var screens=document.querySelectorAll('.screen');
+for(var i=0;i<screens.length;i++)screens[i].classList.remove('active');
+document.getElementById(screenId).classList.add('active');
+if(screenId==='funcPainel')carregarPainelFunc();
+if(screenId==='funcClientes')carregarClientes();
+if(screenId==='funcEmprestimos')carregarEmprestimos();
+if(screenId==='funcCaixa')carregarGastos();
+if(screenId==='donoDash')carregarDashDono();
+if(screenId==='donoRegioesScreen')carregarRegioesDono();
+if(screenId==='donoFuncScreen')carregarFuncionariosDono();
+}
+
+// ==========================================
+// FUNCIONÁRIO: REGIÕES
+// ==========================================
+function carregarRegioesFunc(){
+sbFetch('usuario_regiao','GET',null,'?usuario_id=eq.'+currentUser.id+'&select=regiao_id,regioes(id,nome)').then(function(data){
+var sel=document.getElementById('regiaoSelect');
+sel.innerHTML='';
+if(!data||data.length===0){
+sel.innerHTML='<option>Nenhuma região atribuída</option>';
+navegar('funcPainel',document.querySelector('#navFunc button'));
+return;
+}
+allRegioes=[];
+for(var i=0;i<data.length;i++){
+if(data[i].regioes){
+allRegioes.push(data[i].regioes);
+var opt=document.createElement('option');
+opt.value=data[i].regioes.id;
+opt.textContent='📍 '+data[i].regioes.nome;
+sel.appendChild(opt);
+}
+}
+if(allRegioes.length>0){
+currentRegiao=allRegioes[0].id;
+navegar('funcPainel',document.querySelector('#navFunc button'));
+}
+}).catch(function(e){console.error(e);});
+}
+
+function trocarRegiao(){
+currentRegiao=document.getElementById('regiaoSelect').value;
+carregarPainelFunc();
+}
+
+// ==========================================
+// FUNCIONÁRIO: PAINEL
+// ==========================================
+function carregarPainelFunc(){
+if(!currentRegiao)return;
+var hoje=new Date().toISOString().slice(0,10);
+sbFetch('parcelas','GET',null,'?select=*,emprestimos(cliente_id,clientes(nome))&emprestimos.regiao_id=eq.'+currentRegiao+'&data_vencimento=eq.'+hoje+'&status=neq.pago').then(function(data){
+var el=document.getElementById('cobrancasHoje');
+if(!data||data.length===0){el.innerHTML='<div class="empty">✅ Nenhuma cobrança pra hoje</div>';
+document.getElementById('aReceberHoje').textContent='R$ 0';return;}
+var html='';var total=0;
+for(var i=0;i<data.length;i++){
+var p=data[i];var nome=p.emprestimos&&p.emprestimos.clientes?p.emprestimos.clientes.nome:'Cliente';
+var restante=p.valor-p.valor_pago;total+=restante;
+html+='<div class="list-item"><div class="info"><div class="name">'+nome+'</div><div class="detail">Parcela '+p.numero+' — '+p.status+'</div></div><div class="amount">R$ '+restante.toFixed(2)+'</div></div>';
+}
+el.innerHTML=html;
+document.getElementById('aReceberHoje').textContent='R$ '+total.toFixed(2);
+}).catch(function(e){console.error(e);document.getElementById('cobrancasHoje').innerHTML='<div class="empty">Erro ao carregar</div>';});
+
+sbFetch('parcelas','GET',null,'?select=*,emprestimos(cliente_id,regiao_id,clientes(nome))&emprestimos.regiao_id=eq.'+currentRegiao+'&status=eq.atrasado&order=data_vencimento.asc').then(function(data){
+var el=document.getElementById('emAtraso');
+if(!data||data.length===0){el.innerHTML='<div class="empty">✅ Nenhum atraso</div>';return;}
+var html='';
+for(var i=0;i<data.length;i++){
+var p=data[i];var nome=p.emprestimos&&p.emprestimos.clientes?p.emprestimos.clientes.nome:'Cliente';
+var dias=Math.floor((new Date()-new Date(p.data_vencimento))/(1000*60*60*24));
+var restante=p.valor-p.valor_pago;
+html+='<div class="list-item"><div class="info"><div class="name">'+nome+'</div><div class="detail">🔴 '+dias+' dias em atraso</div></div><div class="amount red">R$ '+restante.toFixed(2)+'</div></div>';
+}
+el.innerHTML=html;
+}).catch(function(e){console.error(e);});
+
+sbFetch('pagamentos','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_pagamento=eq.'+hoje).then(function(data){
+var total=0;if(data)for(var i=0;i<data.length;i++)total+=data[i].valor;
+document.getElementById('recebidoHoje').textContent='R$ '+total.toFixed(2);
+}).catch(function(e){});
+
+sbFetch('entregas','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_entrega=eq.'+hoje).then(function(data){
+var total=0;if(data)for(var i=0;i<data.length;i++)total+=data[i].valor;
+document.getElementById('entregueHoje').textContent='R$ '+total.toFixed(2);
+}).catch(function(e){});
+
+sbFetch('gastos','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_gasto=eq.'+hoje).then(function(data){
+var total=0;if(data)for(var i=0;i<data.length;i++)total+=data[i].valor;
+document.getElementById('gastosHoje').textContent='R$ '+total.toFixed(2);
+}).catch(function(e){});
+}
+
+// ==========================================
+// FUNCIONÁRIO: CLIENTES
+// ==========================================
+function carregarClientes(){
+if(!currentRegiao)return;
+sbFetch('clientes','GET',null,'?regiao_id=eq.'+currentRegiao+'&ativo=eq.true&order=nome.asc').then(function(data){
+allClientes=data||[];
+renderClientes(allClientes);
+}).catch(function(e){document.getElementById('listaClientes').innerHTML='<div class="empty">Erro ao carregar</div>';});
+}
+
+function renderClientes(lista){
+var el=document.getElementById('listaClientes');
+if(!lista||lista.length===0){el.innerHTML='<div class="empty">Nenhum cliente cadastrado</div>';return;}
+var html='';
+for(var i=0;i<lista.length;i++){
+var c=lista[i];
+html+='<div class="list-item" onclick="verCliente(\''+c.id+'\')"><div class="info"><div class="name">👤 '+c.nome+'</div><div class="detail">'+(c.telefone||'Sem telefone')+' — '+(c.bairro||'')+'</div></div></div>';
+}
+el.innerHTML=html;
+}
+
+function buscarClientes(){
+var termo=document.getElementById('buscaCliente').value.toLowerCase();
+if(!termo){renderClientes(allClientes);return;}
+var filtrados=allClientes.filter(function(c){return c.nome.toLowerCase().indexOf(termo)>-1;});
+renderClientes(filtrados);
+}
+
+function abrirModalCliente(){
+var html='<h3>👤 Novo Cliente</h3>';
+html+='<div class="form-group"><label>Nome *</label><input id="cNome" placeholder="Nome completo"></div>';
+html+='<div class="form-group"><label>CPF</label><input id="cCpf" placeholder="000.000.000-00"></div>';
+html+='<div class="form-group"><label>Telefone</label><input id="cTel" placeholder="(11) 99999-9999"></div>';
+html+='<div class="form-group"><label>Endereço</label><input id="cEnd" placeholder="Rua, número"></div>';
+html+='<div class="form-group"><label>Bairro</label><input id="cBairro" placeholder="Bairro"></div>';
+html+='<div class="form-group"><label>Referência</label><input id="cRef" placeholder="Ao lado do mercado..."></div>';
+html+='<div class="form-group"><label>Observação</label><textarea id="cObs" placeholder="Anotações..."></textarea></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarCliente()">Salvar ✅</button></div>';
+abrirModal(html);
+}
+
+function salvarCliente(){
+var nome=document.getElementById('cNome').value.trim();
+if(!nome){alert('Nome é obrigatório!');return;}
+var cliente={regiao_id:currentRegiao,nome:nome,cpf:document.getElementById('cCpf').value.trim(),telefone:document.getElementById('cTel').value.trim(),endereco:document.getElementById('cEnd').value.trim(),bairro:document.getElementById('cBairro').value.trim(),referencia:document.getElementById('cRef').value.trim(),observacao:document.getElementById('cObs').value.trim()};
+sbFetch('clientes','POST',cliente).then(function(){fecharModal();carregarClientes();alert('Cliente cadastrado! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function verCliente(id){
+var c=allClientes.find(function(x){return x.id===id;});
+if(!c)return;
+var html='<h3>👤 '+c.nome+'</h3>';
+html+='<div class="stat"><span class="label">CPF</span><span class="value">'+(c.cpf||'-')+'</span></div>';
+html+='<div class="stat"><span class="label">Telefone</span><span class="value">'+(c.telefone||'-')+'</span></div>';
+html+='<div class="stat"><span class="label">Endereço</span><span class="value">'+(c.endereco||'-')+'</span></div>';
+html+='<div class="stat"><span class="label">Bairro</span><span class="value">'+(c.bairro||'-')+'</span></div>';
+html+='<div class="stat"><span class="label">Referência</span><span class="value">'+(c.referencia||'-')+'</span></div>';
+html+='<div class="stat"><span class="label">Observação</span><span class="value">'+(c.observacao||'-')+'</span></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Fechar</button><button class="btn btn-primary" onclick="fecharModal();abrirModalEmprestimo(\''+id+'\')">💰 Novo Empréstimo</button></div>';
+abrirModal(html);
+}
+
+// ==========================================
+// FUNCIONÁRIO: EMPRÉSTIMOS
+// ==========================================
+function carregarEmprestimos(){
+if(!currentRegiao)return;
+sbFetch('emprestimos','GET',null,'?regiao_id=eq.'+currentRegiao+'&select=*,clientes(nome)&order=criado_em.desc').then(function(data){
+allEmprestimos=data||[];
+filtrarEmprestimos('ativo',document.querySelector('#tabsEmprestimo .active'));
+}).catch(function(e){document.getElementById('listaEmprestimos').innerHTML='<div class="empty">Erro</div>';});
+}
+
+function filtrarEmprestimos(filtro,btn){
+if(btn){var btns=btn.parentElement.querySelectorAll('button');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');btn.classList.add('active');}
+var lista=allEmprestimos;
+if(filtro!=='todos')lista=allEmprestimos.filter(function(e){return e.status===filtro;});
+var el=document.getElementById('listaEmprestimos');
+if(!lista||lista.length===0){el.innerHTML='<div class="empty">Nenhum empréstimo</div>';return;}
+var html='';
+for(var i=0;i<lista.length;i++){
+var e=lista[i];var nome=e.clientes?e.clientes.nome:'Cliente';
+var badge=e.status==='ativo'?'badge-green':e.status==='quitado'?'badge-blue':'badge-red';
+html+='<div class="list-item" onclick="verEmprestimo(\''+e.id+'\')"><div class="info"><div class="name">'+nome+'</div><div class="detail">'+e.num_parcelas+'x R$ '+e.valor_parcela.toFixed(2)+' — '+e.frequencia+' <span class="badge '+badge+'">'+e.status+'</span></div></div><div class="amount">R$ '+e.valor_total.toFixed(2)+'</div></div>';
+}
+el.innerHTML=html;
+}
+
+function abrirModalEmprestimo(clienteId){
+var html='<h3>💰 Novo Empréstimo</h3>';
+html+='<div class="form-group"><label>Cliente *</label><select id="eCliente"><option value="">Selecione...</option>';
+for(var i=0;i<allClientes.length;i++){
+var sel=clienteId===allClientes[i].id?' selected':'';
+html+='<option value="'+allClientes[i].id+'"'+sel+'>'+allClientes[i].nome+'</option>';
+}
+html+='</select></div>';
+html+='<div class="form-group"><label>Valor Emprestado (R$) *</label><input type="number" id="eValor" placeholder="1000" oninput="calcularEmprestimo()"></div>';
+html+='<div class="form-group"><label>Juros (%) *</label><input type="number" id="eJuros" placeholder="20" oninput="calcularEmprestimo()"></div>';
+html+='<div class="form-group"><label>Tipo de Juros</label><select id="eTipoJuros"><option value="simples">Simples</option><option value="composto">Composto</option></select></div>';
+html+='<div class="form-group"><label>Parcelas *</label><input type="number" id="eParcelas" placeholder="10" oninput="calcularEmprestimo()"></div>';
+html+='<div class="form-group"><label>Frequência *</label><select id="eFreq"><option value="diario">Diário (seg-sáb)</option><option value="semanal">Semanal</option><option value="mensal">Mensal</option></select></div>';
+html+='<div class="calc-box" id="calcBox" style="display:none"><div class="calc-row"><span>💰 Valor emprestado</span><span id="calcValor">-</span></div><div class="calc-row"><span>📈 Juros</span><span id="calcJuros">-</span></div><div class="calc-row total"><span>💵 Total a pagar</span><span id="calcTotal">-</span></div><div class="calc-row"><span>📋 Parcelas</span><span id="calcParcelas">-</span></div></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarEmprestimo()">Confirmar ✅</button></div>';
+abrirModal(html);
+}
+
+function calcularEmprestimo(){
+var valor=parseFloat(document.getElementById('eValor').value)||0;
+var juros=parseFloat(document.getElementById('eJuros').value)||0;
+var parcelas=parseInt(document.getElementById('eParcelas').value)||0;
+var tipo=document.getElementById('eTipoJuros').value;
+if(valor<=0||juros<=0||parcelas<=0){document.getElementById('calcBox').style.display='none';return;}
+var totalJuros,totalPagar,valorParcela;
+if(tipo==='simples'){
+totalJuros=valor*(juros/100);
+totalPagar=valor+totalJuros;
+}else{
+totalPagar=valor*Math.pow(1+(juros/100),1);
+totalJuros=totalPagar-valor;
+}
+valorParcela=totalPagar/parcelas;
+document.getElementById('calcBox').style.display='block';
+document.getElementById('calcValor').textContent='R$ '+valor.toFixed(2);
+document.getElementById('calcJuros').textContent='R$ '+totalJuros.toFixed(2)+' ('+juros+'%)';
+document.getElementById('calcTotal').textContent='R$ '+totalPagar.toFixed(2);
+document.getElementById('calcParcelas').textContent=parcelas+'x R$ '+valorParcela.toFixed(2);
+}
+
+function salvarEmprestimo(){
+var clienteId=document.getElementById('eCliente').value;
+var valor=parseFloat(document.getElementById('eValor').value)||0;
+var juros=parseFloat(document.getElementById('eJuros').value)||0;
+var parcelas=parseInt(document.getElementById('eParcelas').value)||0;
+var tipo=document.getElementById('eTipoJuros').value;
+var freq=document.getElementById('eFreq').value;
+if(!clienteId||valor<=0||juros<=0||parcelas<=0){alert('Preencha todos os campos!');return;}
+var totalJuros,totalPagar;
+if(tipo==='simples'){totalJuros=valor*(juros/100);totalPagar=valor+totalJuros;}
+else{totalPagar=valor*Math.pow(1+(juros/100),1);totalJuros=totalPagar-valor;}
+var valorParcela=totalPagar/parcelas;
+var emp={cliente_id:clienteId,regiao_id:currentRegiao,funcionario_id:currentUser.id,valor_emprestado:valor,juros_percentual:juros,tipo_juros:tipo,valor_total:parseFloat(totalPagar.toFixed(2)),num_parcelas:parcelas,valor_parcela:parseFloat(valorParcela.toFixed(2)),frequencia:freq,data_inicio:new Date().toISOString().slice(0,10)};
+sbFetch('emprestimos','POST',emp).then(function(data){
+if(!data||data.length===0){alert('Erro ao criar empréstimo');return;}
+var empId=data[0].id;
+var parcelasArr=[];
+var dataAtual=new Date();
+for(var i=0;i<parcelas;i++){
+var dataVenc=new Date(dataAtual);
+if(freq==='diario'){
+var dias=0;var added=0;
+while(added<=i){dataVenc=new Date(dataAtual);dataVenc.setDate(dataAtual.getDate()+dias);if(dataVenc.getDay()!==0)added++;dias++;}
+}else if(freq==='semanal'){dataVenc.setDate(dataAtual.getDate()+(7*(i+1)));}
+else{dataVenc.setMonth(dataAtual.getMonth()+(i+1));}
+parcelasArr.push({emprestimo_id:empId,numero:i+1,valor:parseFloat(valorParcela.toFixed(2)),data_vencimento:dataVenc.toISOString().slice(0,10)});
+}
+return sbFetch('parcelas','POST',parcelasArr);
+}).then(function(){fecharModal();carregarEmprestimos();alert('Empréstimo criado! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function verEmprestimo(id){
+var e=allEmprestimos.find(function(x){return x.id===id;});
+if(!e)return;
+var nome=e.clientes?e.clientes.nome:'Cliente';
+sbFetch('parcelas','GET',null,'?emprestimo_id=eq.'+id+'&order=numero.asc').then(function(parcelas){
+var html='<h3>💰 Empréstimo — '+nome+'</h3>';
+html+='<div class="stat"><span class="label">Valor emprestado</span><span class="value">R$ '+e.valor_emprestado.toFixed(2)+'</span></div>';
+html+='<div class="stat"><span class="label">Total com juros</span><span class="value">R$ '+e.valor_total.toFixed(2)+'</span></div>';
+html+='<div class="stat"><span class="label">Parcelas</span><span class="value">'+e.num_parcelas+'x R$ '+e.valor_parcela.toFixed(2)+'</span></div>';
+html+='<div class="stat"><span class="label">Frequência</span><span class="value">'+e.frequencia+'</span></div>';
+html+='<div class="stat"><span class="label">Status</span><span class="value"><span class="badge '+(e.status==='ativo'?'badge-green':'badge-blue')+'">'+e.status+'</span></span></div>';
+html+='<div class="section-title">📋 Parcelas</div>';
+if(parcelas&&parcelas.length>0){
+for(var i=0;i<parcelas.length;i++){
+var p=parcelas[i];var restante=p.valor-p.valor_pago;
+var icon=p.status==='pago'?'✅':p.status==='atrasado'?'🔴':'⏰';
+html+='<div class="list-item"><div class="info"><div class="name">'+icon+' Parcela '+p.numero+'/'+e.num_parcelas+'</div><div class="detail">Vence: '+p.data_vencimento+'</div></div><div class="amount '+(p.status==='pago'?'green':'')+'">R$ '+restante.toFixed(2)+'</div></div>';
+}
+}
+html+='<div class="modal-buttons">';
+if(e.status==='ativo')html+='<button class="btn btn-warning" onclick="fecharModal();abrirRenovar(\''+id+'\',\''+nome+'\')">🔄 Renovar</button>';
+html+='<button class="btn btn-outline" onclick="fecharModal()">Fechar</button></div>';
+abrirModal(html);
+}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// FUNCIONÁRIO: PAGAMENTO
+// ==========================================
+function abrirModalPagamento(){
+sbFetch('emprestimos','GET',null,'?regiao_id=eq.'+currentRegiao+'&status=eq.ativo&select=*,clientes(nome)').then(function(emps){
+var html='<h3>✅ Registrar Pagamento</h3>';
+html+='<div class="form-group"><label>Cliente/Empréstimo *</label><select id="pgEmp" onchange="carregarParcelaPg()"><option value="">Selecione...</option>';
+if(emps)for(var i=0;i<emps.length;i++){
+var nome=emps[i].clientes?emps[i].clientes.nome:'Cliente';
+html+='<option value="'+emps[i].id+'" data-cliente="'+emps[i].cliente_id+'">'+nome+' — R$ '+emps[i].valor_total.toFixed(2)+'</option>';
+}
+html+='</select></div>';
+html+='<div id="pgParcelaInfo"></div>';
+html+='<div class="form-group"><label>Valor Pago (R$) *</label><input type="number" id="pgValor" placeholder="100.00"></div>';
+html+='<div class="form-group"><label>Forma</label><select id="pgForma"><option value="dinheiro">💵 Dinheiro</option><option value="pix">📱 Pix</option></select></div>';
+html+='<div class="form-group"><label>Observação</label><input id="pgObs" placeholder=""></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarPagamento()">Confirmar ✅</button></div>';
+abrirModal(html);
+}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function carregarParcelaPg(){
+var empId=document.getElementById('pgEmp').value;
+if(!empId){document.getElementById('pgParcelaInfo').innerHTML='';return;}
+sbFetch('parcelas','GET',null,'?emprestimo_id=eq.'+empId+'&status=neq.pago&order=numero.asc&limit=1').then(function(data){
+if(!data||data.length===0){document.getElementById('pgParcelaInfo').innerHTML='<div class="empty">Todas parcelas pagas</div>';return;}
+var p=data[0];var restante=p.valor-p.valor_pago;
+document.getElementById('pgParcelaInfo').innerHTML='<div class="calc-box"><div class="calc-row"><span>Parcela '+p.numero+'</span><span>R$ '+p.valor.toFixed(2)+'</span></div><div class="calc-row"><span>Já pago</span><span>R$ '+p.valor_pago.toFixed(2)+'</span></div><div class="calc-row total"><span>Restante</span><span>R$ '+restante.toFixed(2)+'</span></div></div>';
+document.getElementById('pgValor').value=restante.toFixed(2);
+document.getElementById('pgParcelaInfo').dataset.parcelaId=p.id;
+document.getElementById('pgParcelaInfo').dataset.restante=restante;
+}).catch(function(e){console.error(e);});
+}
+
+function salvarPagamento(){
+var empId=document.getElementById('pgEmp').value;
+var valor=parseFloat(document.getElementById('pgValor').value)||0;
+var forma=document.getElementById('pgForma').value;
+var obs=document.getElementById('pgObs').value;
+var parcelaId=document.getElementById('pgParcelaInfo').dataset.parcelaId;
+var sel=document.getElementById('pgEmp');
+var clienteId=sel.options[sel.selectedIndex]?sel.options[sel.selectedIndex].dataset.cliente:'';
+if(!empId||valor<=0||!parcelaId){alert('Preencha todos os campos!');return;}
+var pg={parcela_id:parcelaId,emprestimo_id:empId,cliente_id:clienteId,regiao_id:currentRegiao,funcionario_id:currentUser.id,valor:valor,forma:forma,observacao:obs};
+sbFetch('pagamentos','POST',pg).then(function(){
+var restante=parseFloat(document.getElementById('pgParcelaInfo').dataset.restante)||0;
+var novoStatus=valor>=restante?'pago':'parcial';
+var novoPago=valor;
+return sbFetch('parcelas','PATCH',{valor_pago:novoPago,status:novoStatus},'?id=eq.'+parcelaId);
+}).then(function(){fecharModal();carregarPainelFunc();alert('Pagamento registrado! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// FUNCIONÁRIO: ENTREGA
+// ==========================================
+function abrirModalEntrega(){
+var html='<h3>💵 Entrega de Dinheiro</h3>';
+html+='<div class="form-group"><label>Cliente *</label><select id="entCliente"><option value="">Selecione...</option>';
+for(var i=0;i<allClientes.length;i++)html+='<option value="'+allClientes[i].id+'">'+allClientes[i].nome+'</option>';
+html+='</select></div>';
+html+='<div class="form-group"><label>Valor (R$) *</label><input type="number" id="entValor" placeholder="500"></div>';
+html+='<div class="form-group"><label>Forma</label><select id="entForma"><option value="dinheiro">💵 Dinheiro</option><option value="pix">📱 Pix</option></select></div>';
+html+='<div class="form-group"><label>Observação</label><input id="entObs" placeholder="Empréstimo novo..."></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarEntrega()">Confirmar ✅</button></div>';
+abrirModal(html);
+}
+
+function salvarEntrega(){
+var clienteId=document.getElementById('entCliente').value;
+var valor=parseFloat(document.getElementById('entValor').value)||0;
+if(!clienteId||valor<=0){alert('Preencha todos os campos!');return;}
+var ent={cliente_id:clienteId,regiao_id:currentRegiao,funcionario_id:currentUser.id,valor:valor,forma:document.getElementById('entForma').value,observacao:document.getElementById('entObs').value};
+sbFetch('entregas','POST',ent).then(function(){fecharModal();carregarPainelFunc();alert('Entrega registrada! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// FUNCIONÁRIO: GASTOS
+// ==========================================
+function abrirModalGasto(){
+var html='<h3>💸 Registrar Gasto</h3>';
+html+='<div class="form-group"><label>Descrição *</label><input id="gDesc" placeholder="Gasolina, almoço..."></div>';
+html+='<div class="form-group"><label>Valor (R$) *</label><input type="number" id="gValor" placeholder="80"></div>';
+html+='<div class="form-group"><label>Categoria</label><select id="gCat"><option value="combustivel">⛽ Combustível</option><option value="alimentacao">🍔 Alimentação</option><option value="transporte">🚗 Transporte</option><option value="celular">📱 Celular</option><option value="outros">📦 Outros</option></select></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarGasto()">Confirmar ✅</button></div>';
+abrirModal(html);
+}
+
+function salvarGasto(){
+var desc=document.getElementById('gDesc').value.trim();
+var valor=parseFloat(document.getElementById('gValor').value)||0;
+if(!desc||valor<=0){alert('Preencha todos os campos!');return;}
+var g={regiao_id:currentRegiao,funcionario_id:currentUser.id,descricao:desc,valor:valor,categoria:document.getElementById('gCat').value};
+sbFetch('gastos','POST',g).then(function(){fecharModal();carregarGastos();carregarPainelFunc();alert('Gasto registrado! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function carregarGastos(){
+if(!currentRegiao)return;
+var hoje=new Date().toISOString().slice(0,10);
+sbFetch('gastos','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_gasto=eq.'+hoje+'&order=criado_em.desc').then(function(data){
+var el=document.getElementById('gastosLista');
+if(!data||data.length===0){el.innerHTML='<div class="empty">Nenhum gasto hoje</div>';return;}
+var html='';
+for(var i=0;i<data.length;i++){
+var g=data[i];
+html+='<div class="list-item"><div class="info"><div class="name">'+g.descricao+'</div><div class="detail">'+g.categoria+'</div></div><div class="amount red">R$ '+g.valor.toFixed(2)+'</div></div>';
+}
+el.innerHTML=html;
+}).catch(function(e){});
+}
+
+// ==========================================
+// FUNCIONÁRIO: RETIRADA SÓCIO
+// ==========================================
+function abrirModalRetirada(){
+var html='<h3>💰 Retirada de Sócio</h3>';
+html+='<div class="form-group"><label>Nome do Sócio *</label><input id="retNome" placeholder="Nome"></div>';
+html+='<div class="form-group"><label>Valor (R$) *</label><input type="number" id="retValor" placeholder="500"></div>';
+html+='<div class="form-group"><label>Forma</label><select id="retForma"><option value="dinheiro">💵 Dinheiro</option><option value="pix">📱 Pix</option></select></div>';
+html+='<div class="form-group"><label>Observação</label><input id="retObs" placeholder=""></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarRetirada()">Confirmar ✅</button></div>';
+abrirModal(html);
+}
+
+function salvarRetirada(){
+var nome=document.getElementById('retNome').value.trim();
+var valor=parseFloat(document.getElementById('retValor').value)||0;
+if(!nome||valor<=0){alert('Preencha todos os campos!');return;}
+var r={regiao_id:currentRegiao,funcionario_id:currentUser.id,nome_socio:nome,valor:valor,forma:document.getElementById('retForma').value,observacao:document.getElementById('retObs').value};
+sbFetch('retiradas','POST',r).then(function(){fecharModal();alert('Retirada registrada! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// FUNCIONÁRIO: FECHAR CAIXA
+// ==========================================
+function abrirFecharCaixa(){
+var hoje=new Date().toISOString().slice(0,10);
+Promise.all([
+sbFetch('pagamentos','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_pagamento=eq.'+hoje),
+sbFetch('entregas','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_entrega=eq.'+hoje),
+sbFetch('gastos','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_gasto=eq.'+hoje),
+sbFetch('retiradas','GET',null,'?regiao_id=eq.'+currentRegiao+'&data_retirada=eq.'+hoje)
+]).then(function(results){
+var pgtos=results[0]||[];var entregas=results[1]||[];var gastos=results[2]||[];var retiradas=results[3]||[];
+var totalRec=0,totalEnt=0,totalGas=0,totalRet=0;
+for(var i=0;i<pgtos.length;i++)totalRec+=pgtos[i].valor;
+for(var i=0;i<entregas.length;i++)totalEnt+=entregas[i].valor;
+for(var i=0;i<gastos.length;i++)totalGas+=gastos[i].valor;
+for(var i=0;i<retiradas.length;i++)totalRet+=retiradas[i].valor;
+var saldo=totalRec-totalEnt-totalGas-totalRet;
+var html='<h3>📊 Fechar Caixa — Hoje</h3>';
+html+='<div class="calc-box"><div class="calc-row"><span>💰 Recebido</span><span class="green">R$ '+totalRec.toFixed(2)+'</span></div>';
+html+='<div class="calc-row"><span>💵 Entregue</span><span class="red">R$ '+totalEnt.toFixed(2)+'</span></div>';
+html+='<div class="calc-row"><span>💸 Gastos</span><span class="red">R$ '+totalGas.toFixed(2)+'</span></div>';
+html+='<div class="calc-row"><span>💰 Retiradas</span><span class="red">R$ '+totalRet.toFixed(2)+'</span></div>';
+html+='<div class="calc-row total"><span>📊 Saldo</span><span class="'+(saldo>=0?'green':'red')+'">R$ '+saldo.toFixed(2)+'</span></div></div>';
+html+='<div class="form-group"><label>💵 Dinheiro em mãos (R$)</label><input type="number" id="cxDinheiro" placeholder="0.00" oninput="calcDiferenca('+saldo+')"></div>';
+html+='<div id="cxDiferenca"></div>';
+html+='<div class="form-group"><label>Observação</label><input id="cxObs" placeholder=""></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarFechamento('+totalRec+','+totalEnt+','+totalGas+','+totalRet+','+saldo+')">Fechar Caixa ✅</button></div>';
+abrirModal(html);
+}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function calcDiferenca(saldo){
+var dm=parseFloat(document.getElementById('cxDinheiro').value)||0;
+var diff=dm-saldo;
+var el=document.getElementById('cxDiferenca');
+if(Math.abs(diff)<0.01)el.innerHTML='<div class="calc-box" style="background:#e8f5e9"><div class="calc-row total"><span>✅ Confere!</span><span class="green">R$ 0,00</span></div></div>';
+else el.innerHTML='<div class="calc-box" style="background:#fce4ec"><div class="calc-row total"><span>⚠️ Diferença</span><span class="red">R$ '+diff.toFixed(2)+'</span></div></div>';
+}
+
+function salvarFechamento(rec,ent,gas,ret,saldo){
+var dm=parseFloat(document.getElementById('cxDinheiro').value)||0;
+var fc={regiao_id:currentRegiao,funcionario_id:currentUser.id,total_recebido:rec,total_entregue:ent,total_gastos:gas,total_retiradas:ret,saldo:saldo,dinheiro_mao:dm,diferenca:dm-saldo,observacao:document.getElementById('cxObs').value};
+sbFetch('fechamento_caixa','POST',fc).then(function(){fecharModal();alert('Caixa fechado! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// FUNCIONÁRIO: RENOVAR
+// ==========================================
+function abrirRenovar(empId,nome){
+sbFetch('parcelas','GET',null,'?emprestimo_id=eq.'+empId+'&status=neq.pago').then(function(parcelas){
+var saldoDevedor=0;
+if(parcelas)for(var i=0;i<parcelas.length;i++)saldoDevedor+=(parcelas[i].valor-parcelas[i].valor_pago);
+var html='<h3>🔄 Renovar — '+nome+'</h3>';
+html+='<div class="calc-box"><div class="calc-row"><span>Saldo devedor atual</span><span class="red">R$ '+saldoDevedor.toFixed(2)+'</span></div></div>';
+html+='<div class="form-group"><label>☑️ Quitar empréstimo atual (R$ '+saldoDevedor.toFixed(2)+')</label></div>';
+html+='<div class="form-group"><label>Valor adicional (R$)</label><input type="number" id="rnValor" placeholder="300"></div>';
+html+='<div class="form-group"><label>Juros (%) *</label><input type="number" id="rnJuros" placeholder="20"></div>';
+html+='<div class="form-group"><label>Tipo de Juros</label><select id="rnTipo"><option value="simples">Simples</option><option value="composto">Composto</option></select></div>';
+html+='<div class="form-group"><label>Parcelas *</label><input type="number" id="rnParcelas" placeholder="10"></div>';
+html+='<div class="form-group"><label>Frequência</label><select id="rnFreq"><option value="diario">Diário (seg-sáb)</option><option value="semanal">Semanal</option><option value="mensal">Mensal</option></select></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-warning" onclick="salvarRenovacao(\''+empId+'\','+saldoDevedor+')">Renovar ✅</button></div>';
+abrirModal(html);
+}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function salvarRenovacao(empAntigoId,saldoDevedor){
+var adicional=parseFloat(document.getElementById('rnValor').value)||0;
+var juros=parseFloat(document.getElementById('rnJuros').value)||0;
+var parcelas=parseInt(document.getElementById('rnParcelas').value)||0;
+var tipo=document.getElementById('rnTipo').value;
+var freq=document.getElementById('rnFreq').value;
+if(juros<=0||parcelas<=0){alert('Preencha juros e parcelas!');return;}
+var novoValor=saldoDevedor+adicional;
+var totalJuros,totalPagar;
+if(tipo==='simples'){totalJuros=novoValor*(juros/100);totalPagar=novoValor+totalJuros;}
+else{totalPagar=novoValor*Math.pow(1+(juros/100),1);totalJuros=totalPagar-novoValor;}
+var valorParcela=totalPagar/parcelas;
+var empAntigo=allEmprestimos.find(function(e){return e.id===empAntigoId;});
+var clienteId=empAntigo?empAntigo.cliente_id:'';
+sbFetch('emprestimos','PATCH',{status:'renovado'},'?id=eq.'+empAntigoId).then(function(){
+var emp={cliente_id:clienteId,regiao_id:currentRegiao,funcionario_id:currentUser.id,valor_emprestado:novoValor,juros_percentual:juros,tipo_juros:tipo,valor_total:parseFloat(totalPagar.toFixed(2)),num_parcelas:parcelas,valor_parcela:parseFloat(valorParcela.toFixed(2)),frequencia:freq,data_inicio:new Date().toISOString().slice(0,10),emprestimo_anterior_id:empAntigoId};
+return sbFetch('emprestimos','POST',emp);
+}).then(function(data){
+if(!data||data.length===0)throw new Error('Erro ao criar');
+var empId=data[0].id;
+var parcelasArr=[];var dataAtual=new Date();
+for(var i=0;i<parcelas;i++){
+var dataVenc=new Date(dataAtual);
+if(freq==='diario'){var dias=0;var added=0;while(added<=i){dataVenc=new Date(dataAtual);dataVenc.setDate(dataAtual.getDate()+dias);if(dataVenc.getDay()!==0)added++;dias++;}}
+else if(freq==='semanal')dataVenc.setDate(dataAtual.getDate()+(7*(i+1)));
+else dataVenc.setMonth(dataAtual.getMonth()+(i+1));
+parcelasArr.push({emprestimo_id:empId,numero:i+1,valor:parseFloat(valorParcela.toFixed(2)),data_vencimento:dataVenc.toISOString().slice(0,10)});
+}
+return sbFetch('parcelas','POST',parcelasArr);
+}).then(function(){fecharModal();carregarEmprestimos();alert('Empréstimo renovado! ✅\nAntigo vai pro histórico.');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// DONO: DASHBOARD
+// ==========================================
+function carregarDashDono(){
+sbFetch('emprestimos','GET',null,'?status=eq.ativo').then(function(data){
+var totalEmp=0,totalRec=0;
+if(data)for(var i=0;i<data.length;i++){totalEmp+=data[i].valor_emprestado;totalRec+=data[i].valor_total;}
+document.getElementById('totalEmprestado').textContent='R$ '+totalEmp.toFixed(2);
+document.getElementById('totalReceber').textContent='R$ '+totalRec.toFixed(2);
+}).catch(function(e){});
+
+var mesAtual=new Date().toISOString().slice(0,7);
+sbFetch('pagamentos','GET',null,'?data_pagamento=gte.'+mesAtual+'-01').then(function(data){
+var total=0;if(data)for(var i=0;i<data.length;i++)total+=data[i].valor;
+document.getElementById('totalRecebidoMes').textContent='R$ '+total.toFixed(2);
+}).catch(function(e){});
+
+sbFetch('parcelas','GET',null,'?status=eq.atrasado').then(function(data){
+var total=0;if(data)for(var i=0;i<data.length;i++)total+=(data[i].valor-data[i].valor_pago);
+document.getElementById('totalInadimplencia').textContent='R$ '+total.toFixed(2);
+}).catch(function(e){});
+
+sbFetch('regioes','GET',null,'?ativa=eq.true&order=nome.asc').then(function(data){
+var el=document.getElementById('donoRegioes');
+if(!data||data.length===0){el.innerHTML='<div class="empty">Nenhuma região</div>';return;}
+var html='';
+for(var i=0;i<data.length;i++)html+='<div class="list-item"><div class="info"><div class="name">📍 '+data[i].nome+'</div><div class="detail">'+(data[i].descricao||'')+'</div></div></div>';
+el.innerHTML=html;
+}).catch(function(e){});
+}
+
+// ==========================================
+// DONO: REGIÕES
+// ==========================================
+function carregarRegioesDono(){
+sbFetch('regioes','GET',null,'?order=nome.asc').then(function(data){
+var el=document.getElementById('listaRegioes');
+if(!data||data.length===0){el.innerHTML='<div class="empty">Nenhuma região cadastrada</div>';return;}
+var html='';
+for(var i=0;i<data.length;i++){
+var r=data[i];
+html+='<div class="list-item"><div class="info"><div class="name">📍 '+r.nome+'</div><div class="detail">'+(r.descricao||'Sem descrição')+'</div></div><span class="badge '+(r.ativa?'badge-green':'badge-red')+'">'+(r.ativa?'Ativa':'Inativa')+'</span></div>';
+}
+el.innerHTML=html;
+}).catch(function(e){});
+}
+
+function abrirModalRegiao(){
+var html='<h3>🗂️ Nova Região</h3>';
+html+='<div class="form-group"><label>Nome *</label><input id="rNome" placeholder="Região A"></div>';
+html+='<div class="form-group"><label>Descrição</label><input id="rDesc" placeholder="Centro, Zona Norte..."></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarRegiao()">Salvar ✅</button></div>';
+abrirModal(html);
+}
+
+function salvarRegiao(){
+var nome=document.getElementById('rNome').value.trim();
+if(!nome){alert('Nome é obrigatório!');return;}
+sbFetch('regioes','POST',{nome:nome,descricao:document.getElementById('rDesc').value.trim()}).then(function(){fecharModal();carregarRegioesDono();alert('Região criada! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// DONO: FUNCIONÁRIOS
+// ==========================================
+function carregarFuncionariosDono(){
+sbFetch('usuarios','GET',null,'?tipo=eq.funcionario&order=nome.asc').then(function(funcs){
+if(!funcs||funcs.length===0){document.getElementById('listaFuncionarios').innerHTML='<div class="empty">Nenhum funcionário</div>';return;}
+var promises=[];
+for(var i=0;i<funcs.length;i++){
+promises.push(sbFetch('usuario_regiao','GET',null,'?usuario_id=eq.'+funcs[i].id+'&select=regiao_id,regioes(nome)'));
+}
+Promise.all(promises).then(function(regiaoData){
+var html='';
+for(var i=0;i<funcs.length;i++){
+var f=funcs[i];
+var regioes=regiaoData[i]||[];
+var regNomes=[];
+for(var j=0;j<regioes.length;j++){if(regioes[j].regioes)regNomes.push(regioes[j].regioes.nome);}
+var regText=regNomes.length>0?regNomes.join(', '):'Sem região';
+html+='<div class="list-item" onclick="editarFuncionario(\''+f.id+"','"+f.nome+"','"+f.email+"',"+f.ativo+')"><div class="info"><div class="name">👤 '+f.nome+'</div><div class="detail">📧 '+f.email+' — 🗂️ '+regText+'</div></div><span class="badge '+(f.ativo?'badge-green':'badge-red')+'">'+(f.ativo?'Ativo':'Inativo')+'</span></div>';
+}
+document.getElementById('listaFuncionarios').innerHTML=html;
+}).catch(function(e){console.error(e);});
+}).catch(function(e){document.getElementById('listaFuncionarios').innerHTML='<div class="empty">Erro</div>';});
+}
+
+function abrirModalNovoFunc(){
+var html='<h3>👤 Novo Funcionário</h3>';
+html+='<div class="form-group"><label>Nome *</label><input id="fNome" placeholder="Nome completo"></div>';
+html+='<div class="form-group"><label>Email *</label><input id="fEmail" placeholder="email@exemplo.com" type="email"></div>';
+html+='<div class="form-group"><label>Senha *</label><input id="fSenha" placeholder="Senha de acesso" type="password"></div>';
+html+='<div class="modal-buttons"><button class="btn btn-outline" onclick="fecharModal()">Cancelar</button><button class="btn btn-success" onclick="salvarNovoFunc()">Salvar ✅</button></div>';
+abrirModal(html);
+}
+
+function salvarNovoFunc(){
+var nome=document.getElementById('fNome').value.trim();
+var email=document.getElementById('fEmail').value.trim();
+var senha=document.getElementById('fSenha').value.trim();
+if(!nome||!email||!senha){alert('Preencha todos os campos!');return;}
+sbFetch('usuarios','POST',{nome:nome,email:email,senha:senha,tipo:'funcionario'}).then(function(){fecharModal();carregarFuncionariosDono();alert('Funcionário criado! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function editarFuncionario(id,nome,email,ativo){
+sbFetch('regioes','GET',null,'?ativa=eq.true&order=nome.asc').then(function(regioes){
+return sbFetch('usuario_regiao','GET',null,'?usuario_id=eq.'+id).then(function(vinculadas){
+var vinculadaIds=[];
+if(vinculadas)for(var i=0;i<vinculadas.length;i++)vinculadaIds.push(vinculadas[i].regiao_id);
+var html='<h3>👤 '+nome+'</h3>';
+html+='<div class="stat"><span class="label">📧 Email</span><span class="value">'+email+'</span></div>';
+html+='<div class="stat"><span class="label">🏷️ Status</span><span class="value">'+(ativo?'✅ Ativo':'❌ Inativo')+'</span></div>';
+html+='<div class="section-title">🗂️ Regiões</div>';
+html+='<div class="checkbox-list" id="funcRegioes">';
+if(regioes&&regioes.length>0){
+for(var i=0;i<regioes.length;i++){
+var checked=vinculadaIds.indexOf(regioes[i].id)>-1?'checked':'';
+html+='<label><input type="checkbox" value="'+regioes[i].id+'" '+checked+'> '+regioes[i].nome+'</label>';
+}
+}else{html+='<div class="empty">Nenhuma região cadastrada</div>';}
+html+='</div>';
+html+='<div class="modal-buttons"><button class="btn btn-danger btn-small" onclick="excluirFuncionario(\''+id+'\')">🗑️ Excluir</button><button class="btn btn-outline" onclick="fecharModal()">Fechar</button><button class="btn btn-success" onclick="salvarVinculoRegioes(\''+id+'\')">💾 Salvar</button></div>';
+abrirModal(html);
+});
+}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function salvarVinculoRegioes(userId){
+var checkboxes=document.querySelectorAll('#funcRegioes input[type=checkbox]');
+var selecionadas=[];
+for(var i=0;i<checkboxes.length;i++){if(checkboxes[i].checked)selecionadas.push(checkboxes[i].value);}
+sbFetch('usuario_regiao','DELETE',null,'?usuario_id=eq.'+userId).then(function(){
+if(selecionadas.length===0)return null;
+var vinculos=[];
+for(var i=0;i<selecionadas.length;i++)vinculos.push({usuario_id:userId,regiao_id:selecionadas[i]});
+return sbFetch('usuario_regiao','POST',vinculos);
+}).then(function(){fecharModal();carregarFuncionariosDono();alert('Regiões atualizadas! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function excluirFuncionario(id){
+if(!confirm('Tem certeza que deseja excluir este funcionário?'))return;
+sbFetch('usuario_regiao','DELETE',null,'?usuario_id=eq.'+id).then(function(){
+return sbFetch('usuarios','DELETE',null,'?id=eq.'+id);
+}).then(function(){fecharModal();carregarFuncionariosDono();alert('Funcionário excluído! ✅');}).catch(function(e){alert('Erro: '+e.message);});
+}
+
+// ==========================================
+// MODAL
+// ==========================================
+function abrirModal(html){document.getElementById('modalContent').innerHTML=html;document.getElementById('modal').classList.add('active');}
+function fecharModal(){document.getElementById('modal').classList.remove('active');}
+
+// ==========================================
+// FORMATAÇÃO
+// ==========================================
+function formatMoney(v){return'R$ '+(v||0).toFixed(2).replace('.',',');}
+
+// ==========================================
+// INIT
+// ==========================================
+window.onload=function(){
+var saved=localStorage.getItem('cc_user');
+if(saved){
+try{currentUser=JSON.parse(saved);iniciarApp();}
+catch(e){fazerLogout();}
+}
+};
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)fecharModal();});
+</script>
+</body>
+</html>
